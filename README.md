@@ -1,2 +1,3 @@
-# RifaX
-Sistema de Rifas
+# Rifa X
+
+Rifa X — Genesis
