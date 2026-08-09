@@ -1,0 +1,12 @@
+{
+  "name": "@rifa-x/database",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  }
+}
