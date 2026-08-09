@@ -1,30 +1,17 @@
 # Rifa X — Genesis
 
-Raffle campaign management platform.
+This repository contains the initial monorepo foundation for Rifa X.
 
-**Codename:** Genesis  
-**Version:** 1.0.0-alpha  
-**Status:** Foundation
+## Workspace
 
-## Principles
+- `apps/web` — public and administrative web application.
+- `apps/api` — Hono API running on Cloudflare Workers.
+- `packages/database` — Drizzle/Neon database layer.
 
-- Mobile First
-- Backend-authoritative business rules
-- Secure by default
-- Multi-tenant architecture
-- Soft delete for recoverable entities
-- Auditable critical actions
-- Performance and simplicity
-- MVP scope discipline
+## First endpoint
 
-## Planned stack
+`GET /api/health`
 
-- React + Vite + TypeScript
-- Hono
-- Cloudflare Workers / Pages
-- Neon PostgreSQL
-- Drizzle ORM
-- GitHub
-- Cloudflare R2
+## Security
 
-See `docs/` for the product and technical specification.
+Secrets are intentionally excluded from the repository. Neon credentials and Cloudflare secrets will be configured through environment variables/secrets.

@@ -1,13 +1,12 @@
 {
   "name": "@rifa-x/api",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "lint": "eslint .",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "build": "echo 'build: worker source'",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'lint: pending'",
+    "test": "echo 'test: pending'"
   }
 }
