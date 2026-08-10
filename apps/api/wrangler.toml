@@ -1,4 +1,11 @@
 name = "rifa-x-api"
 main = "src/index.ts"
-compatibility_date = "2026-08-09"
+compatibility_date = "2026-08-10"
 workers_dev = true
+
+[vars]
+APP_ENV = "production"
+
+# Configure secrets outside Git:
+# wrangler secret put DATABASE_URL
+# wrangler secret put SESSION_SECRET
