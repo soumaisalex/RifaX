@@ -1,8 +1,7 @@
 import type { Context, Next } from "hono";
 
-export type AppRole = "OWNER" | "ADMIN";
-export type AuthSession = { userId: string; role: AppRole; expiresAt: number };
-
+export type AppRole = "SUPER_ADMIN" | "ORGANIZATION_ADMIN" | "COLLABORATOR";
+export type AuthSession = { userId: string; organizationId?: string | null; role: AppRole; expiresAt: number };
 const encoder = new TextEncoder();
 
 async function sign(value: string, secret: string) {
@@ -22,7 +21,7 @@ export async function verifySession(token: string | undefined, secret: string): 
   if (!payload || !signature || signature !== await sign(payload, secret)) return null;
   try {
     const session = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))) as AuthSession;
-    if (!session.userId || !["OWNER", "ADMIN"].includes(session.role) || session.expiresAt <= Date.now()) return null;
+    if (!session.userId || !["SUPER_ADMIN", "ORGANIZATION_ADMIN", "COLLABORATOR"].includes(session.role) || session.expiresAt <= Date.now()) return null;
     return session;
   } catch { return null; }
 }
