@@ -1,3 +1,4 @@
+import { Hono } from "hono";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { createDatabase } from "@rifa-x/database";
 import { raffles, raffleNumbers, rafflePrizes } from "@rifa-x/database/schema";
@@ -7,7 +8,6 @@ type Auth = { userId: string; organizationId?: string | null; role: "SUPER_ADMIN
 const adminRaffles = new Hono();
 const auth = (c: any) => c.get("auth") as Auth;
 const canAccess = (organizationId: string, session: Auth) => session.role === "SUPER_ADMIN" || organizationId === session.organizationId;
-const findRaffle = async (db:any, id:string, session:Auth) => { const raffle=await db.query.raffles.findFirst({where:and(eq(raffles.id,id),isNull(raffles.deletedAt)),with:{prizes:{where:isNull(rafflePrizes.deletedAt)}}}); return raffle && canAccess(raffle.organizationId,session) ? raffle : null; };
 
 adminRaffles.use("*", requireRole(["SUPER_ADMIN", "ORGANIZATION_ADMIN"]));
 
@@ -18,11 +18,13 @@ adminRaffles.get("/", async (c) => {
 });
 
 adminRaffles.get("/:id", async (c) => {
-  const db = createDatabase(c.env.DATABASE_URL); const session = auth(c); const raffle = await findRaffle(db,c.req.param("id"),session);
-  if (!raffle) return c.json({error:"Not found"},404);
-  const [counts] = await db.select({available:sql<number>`count(*) filter (where ${raffleNumbers.status} = 'AVAILABLE')`,reserved:sql<number>`count(*) filter (where ${raffleNumbers.status} = 'RESERVED')`,sold:sql<number>`count(*) filter (where ${raffleNumbers.status} = 'SOLD')`,total:sql<number>`count(*)`}).from(raffleNumbers).where(eq(raffleNumbers.raffleId,raffle.id));
+  const db = createDatabase(c.env.DATABASE_URL); const session = auth(c); const id = c.req.param("id");
+  const raffle = await db.query.raffles.findFirst({ where: and(eq(raffles.id,id),isNull(raffles.deletedAt)) });
+  if (!raffle || !canAccess(raffle.organizationId,session)) return c.json({error:"Not found"},404);
+  const prizes = await db.query.rafflePrizes.findMany({ where: and(eq(rafflePrizes.raffleId,id),isNull(rafflePrizes.deletedAt)), orderBy:(table,{asc})=>[asc(table.position)] });
+  const [counts] = await db.select({available:sql<number>`count(*) filter (where ${raffleNumbers.status} = 'AVAILABLE')`,reserved:sql<number>`count(*) filter (where ${raffleNumbers.status} = 'RESERVED')`,sold:sql<number>`count(*) filter (where ${raffleNumbers.status} = 'SOLD')`,total:sql<number>`count(*)`}).from(raffleNumbers).where(eq(raffleNumbers.raffleId,id));
   const revenue = Number(counts.sold) * Number(raffle.ticketPrice);
-  return c.json({raffle,summary:{...counts,revenue:revenue.toFixed(2)}});
+  return c.json({raffle:{...raffle,prizes},summary:{available:Number(counts.available),reserved:Number(counts.reserved),sold:Number(counts.sold),total:Number(counts.total),revenue:revenue.toFixed(2)}});
 });
 
 adminRaffles.post("/", async (c) => {
@@ -41,5 +43,5 @@ adminRaffles.patch("/:id",async(c)=>{const db=createDatabase(c.env.DATABASE_URL)
 adminRaffles.delete("/:id",async(c)=>{const db=createDatabase(c.env.DATABASE_URL);const session=auth(c);const id=c.req.param("id");const existing=await db.query.raffles.findFirst({where:and(eq(raffles.id,id),isNull(raffles.deletedAt))});if(!existing||!canAccess(existing.organizationId,session))return c.json({error:"Not found"},404);await db.update(raffles).set({deletedAt:new Date(),updatedAt:new Date(),status:"CANCELLED"}).where(eq(raffles.id,id));return c.body(null,204);});
 adminRaffles.post("/:id/publish",async(c)=>{const db=createDatabase(c.env.DATABASE_URL);const session=auth(c);const id=c.req.param("id");const existing=await db.query.raffles.findFirst({where:and(eq(raffles.id,id),isNull(raffles.deletedAt))});if(!existing||!canAccess(existing.organizationId,session))return c.json({error:"Not found"},404);const[raffle]=await db.update(raffles).set({status:"ACTIVE",updatedAt:new Date()}).where(eq(raffles.id,id)).returning();return c.json({raffle});});
 adminRaffles.post("/:id/unpublish",async(c)=>{const db=createDatabase(c.env.DATABASE_URL);const session=auth(c);const id=c.req.param("id");const existing=await db.query.raffles.findFirst({where:and(eq(raffles.id,id),isNull(raffles.deletedAt))});if(!existing||!canAccess(existing.organizationId,session)||existing.status!=="ACTIVE")return c.json({error:"Not found or not active"},404);const[raffle]=await db.update(raffles).set({status:"DRAFT",updatedAt:new Date()}).where(eq(raffles.id,id)).returning();return c.json({raffle});});
-adminRaffles.post("/:id/cancel",async(c)=>{const db=createDatabase(c.env.DATABASE_URL);const session=auth(c);const id=c.req.param("id");const existing=await db.query.raffles.findFirst({where:and(eq(raffles.id,id),isNull(raffles.deletedAt))});if(!existing||!canAccess(existing.organizationId,session)||existing.status==="COMPLETED")return c.json({error:"Not found or already completed"},404);const[raffle]=await db.update(raffles).set({status:"CANCELLED",updatedAt:new Date(),deletedAt:new Date()}).where(eq(raffles.id,id)).returning();return c.json({raffle});});
+adminRaffles.post("/:id/cancel",async(c)=>{const db=createDatabase(c.env.DATABASE_URL);const session=auth(c);const id=c.req.param("id");const existing=await db.query.raffles.findFirst({where:and(eq(raffles.id,id),isNull(raffles.deletedAt))});if(!existing||!canAccess(existing.organizationId,session)||existing.status==="COMPLETED")return c.json({error:"Not found or already completed"},404);const[raffle]=await db.update(raffles).set({status:"CANCELLED",updatedAt:new Date(),deletedAt:new Date()}).where(eq(raffles.id,id));return c.json({raffle});});
 export default adminRaffles;
