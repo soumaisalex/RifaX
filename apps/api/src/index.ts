@@ -7,6 +7,7 @@ import adminOrders from "./routes/admin-orders";
 import adminDraws from "./routes/admin-draws";
 import publicRaffles from "./routes/public-raffles";
 import publicOrders from "./routes/public-orders";
+import publicResults from "./routes/public-results";
 import { expireReservations } from "./services/reservation-expiry";
 
 const app = new Hono<{ Bindings: { DATABASE_URL: string; SESSION_SECRET: string; APP_ENV?: string } }>();
@@ -20,6 +21,7 @@ app.route("/api/admin/orders", adminOrders);
 app.route("/api/admin/draws", adminDraws);
 app.route("/api/public/raffles", publicRaffles);
 app.route("/api/public", publicOrders);
+app.route("/api/public", publicResults);
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 app.onError((err, c) => { console.error(err); return c.json({ error: c.env.APP_ENV === "production" ? "Internal server error" : err.message }, 500); });
 export default app;
