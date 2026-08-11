@@ -8,5 +8,11 @@
     "typecheck": "tsc --noEmit",
     "lint": "echo 'lint: pending'",
     "test": "echo 'test: pending'"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.5"
   }
 }
