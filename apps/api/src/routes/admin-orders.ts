@@ -1,6 +1,5 @@
-import { Hono } from "hono";
 import { and, desc, eq, ilike, or } from "drizzle-orm";
-import { buyers, orderItems, orders, payments, raffleNumbers, raffles } from "@rifa-x/database/schema";
+import { auditLogs, buyers, orderItems, orders, payments, raffleNumbers, raffles } from "@rifa-x/database/schema";
 import { createDatabase } from "@rifa-x/database";
 import { requireRole } from "../middleware/auth";
 
@@ -32,6 +31,7 @@ async function updatePayment(c: any, paymentStatus: "CONFIRMED" | "CANCELLED") {
     await tx.update(orders).set({ status: paymentStatus === "CONFIRMED" ? "PAID" : "CANCELLED", updatedAt: now }).where(eq(orders.id, row.order.id));
     const items = await tx.select({ raffleNumberId: orderItems.raffleNumberId }).from(orderItems).where(eq(orderItems.orderId, row.order.id));
     for (const item of items) await tx.update(raffleNumbers).set({ status: paymentStatus === "CONFIRMED" ? "SOLD" : "AVAILABLE", soldAt: paymentStatus === "CONFIRMED" ? now : null, reservationExpiresAt: null, updatedAt: now }).where(eq(raffleNumbers.id, item.raffleNumberId));
+    await tx.insert(auditLogs).values({ organizationId: row.raffle.organizationId, actorUserId: session.userId, action: paymentStatus === "CONFIRMED" ? "PAYMENT_CONFIRMED" : "ORDER_CANCELLED", entityType: "ORDER", entityId: row.order.id, metadata: { paymentId: row.payment.id, amount: row.order.total } });
   });
   return c.json({ success: true, status: paymentStatus });
 }
