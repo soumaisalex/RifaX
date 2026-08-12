@@ -3,9 +3,10 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import { createDatabase } from "@rifa-x/database";
 import { raffles, raffleNumbers, rafflePrizes } from "@rifa-x/database/schema";
 import { requireRole } from "../middleware/auth";
+import type { AppBindings, AppVariables } from "../types";
 
 type Auth = { userId: string; organizationId?: string | null; role: "SUPER_ADMIN" | "ORGANIZATION_ADMIN" | "COLLABORATOR" };
-const adminRaffles = new Hono();
+const adminRaffles = new Hono<{ Bindings: AppBindings; Variables: AppVariables }>();
 const auth = (c: any) => c.get("auth") as Auth;
 const canAccess = (organizationId: string, session: Auth) => session.role === "SUPER_ADMIN" || organizationId === session.organizationId;
 
@@ -33,8 +34,14 @@ adminRaffles.post("/", async (c) => {
   if (!body.title?.trim() || !body.slug?.trim() || !body.ticketPrice || !Number.isInteger(body.numbersCount) || body.numbersCount < 1) return c.json({error:"Invalid raffle data"},400);
   const organizationId = session.role === "SUPER_ADMIN" ? body.organizationId : session.organizationId;
   if (!organizationId || !body.pixKey?.trim() || !body.pixCity?.trim()) return c.json({error:"Organization and Pix configuration are required"},400);
+  const numbersCount = body.numbersCount;
+  const title = body.title.trim();
+  const slug = body.slug.trim().toLowerCase();
+  const ticketPrice = body.ticketPrice;
+  const pixKey = body.pixKey.trim();
+  const pixCity = body.pixCity.trim();
   try {
-    const raffle = await db.transaction(async(tx)=>{ const [created]=await tx.insert(raffles).values({organizationId,title:body.title!.trim(),slug:body.slug!.trim().toLowerCase(),description:body.description?.trim()||null,ticketPrice:body.ticketPrice!,numbersCount:body.numbersCount!,drawMethod:body.drawMethod??"RIFA_X",drawAt:body.drawAt?new Date(body.drawAt):null,pixKey:body.pixKey!.trim(),pixCity:body.pixCity!.trim(),bannerUrl:body.bannerUrl?.trim()||null,status:"DRAFT"}).returning(); await tx.insert(raffleNumbers).values(Array.from({length:body.numbersCount!},(_,i)=>({raffleId:created.id,number:i+1,status:"AVAILABLE" as const}))); if(body.prizes?.length) await tx.insert(rafflePrizes).values(body.prizes.map((p,i)=>({raffleId:created.id,position:i+1,title:p.title.trim(),description:p.description?.trim()||null,imageUrl:p.imageUrl?.trim()||null}))); return created; });
+    const raffle = await db.transaction(async(tx)=>{ const [created]=await tx.insert(raffles).values({organizationId,title,slug,description:body.description?.trim()||null,ticketPrice,numbersCount,drawMethod:body.drawMethod??"RIFA_X",drawAt:body.drawAt?new Date(body.drawAt):null,pixKey,pixCity,bannerUrl:body.bannerUrl?.trim()||null,status:"DRAFT"}).returning(); await tx.insert(raffleNumbers).values(Array.from({length:numbersCount},(_,i)=>({raffleId:created.id,number:i+1,status:"AVAILABLE" as const}))); if(body.prizes?.length) await tx.insert(rafflePrizes).values(body.prizes.map((p,i)=>({raffleId:created.id,position:i+1,title:p.title.trim(),description:p.description?.trim()||null,imageUrl:p.imageUrl?.trim()||null}))); return created; });
     return c.json({raffle},201);
   }catch{return c.json({error:"Unable to create raffle"},409);}
 });
