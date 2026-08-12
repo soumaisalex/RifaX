@@ -22,7 +22,7 @@ adminOrders.get("/:id", async (c) => { const db = createDatabase(c.env.DATABASE_
 adminOrders.post("/:id/confirm-payment", async (c) => updatePayment(c, "CONFIRMED"));
 adminOrders.post("/:id/cancel", async (c) => updatePayment(c, "CANCELLED"));
 
-async function updatePayment(c: Parameters<Parameters<typeof adminOrders.post>[1]>[0], paymentStatus: "CONFIRMED" | "CANCELLED") {
+async function updatePayment(c: any, paymentStatus: "CONFIRMED" | "CANCELLED") {
   const db = createDatabase(c.env.DATABASE_URL); const session = c.get("auth");
   const id = c.req.param("id");
   const [row] = await db.select({ order: orders, raffle: raffles, payment: payments }).from(orders).innerJoin(raffles, eq(raffles.id, orders.raffleId)).leftJoin(payments, eq(payments.orderId, orders.id)).where(and(eq(orders.id, id), scope(session))).limit(1);
