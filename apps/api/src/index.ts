@@ -9,8 +9,9 @@ import publicRaffles from "./routes/public-raffles";
 import publicOrders from "./routes/public-orders";
 import publicResults from "./routes/public-results";
 import { expireReservations } from "./services/reservation-expiry";
+import type { AppBindings, AppVariables } from "./types";
 
-const app = new Hono<{ Bindings: { DATABASE_URL: string; SESSION_SECRET: string; APP_ENV?: string } }>();
+const app = new Hono<{ Bindings: AppBindings; Variables: AppVariables }>();
 app.use("/api/*", cors({ origin: (origin) => origin || "", allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"], allowHeaders: ["Content-Type", "Authorization"], maxAge: 86400 }));
 app.use("/api/*", async (c, next) => { c.header("X-Content-Type-Options", "nosniff"); c.header("X-Frame-Options", "DENY"); c.header("Referrer-Policy", "strict-origin-when-cross-origin"); await next(); });
 app.get("/api/health", (c) => c.json({ status: "ok", service: "rifa-x-api", env: c.env.APP_ENV ?? "development" }));
