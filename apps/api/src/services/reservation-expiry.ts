@@ -18,7 +18,7 @@ export async function expireReservations(databaseUrl: string) {
         .set({ status: "EXPIRED", updatedAt: now })
         .where(and(eq(orders.id, order.id), eq(orders.status, "PENDING")));
 
-      if (result.rowCount !== 1) return;
+      if (result.length !== 1) return;
 
       await tx.update(payments)
         .set({ status: "CANCELLED", updatedAt: now })
