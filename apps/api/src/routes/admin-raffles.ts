@@ -31,10 +31,11 @@ adminRaffles.get("/:id", async (c) => {
 adminRaffles.post("/", async (c) => {
   const db = createDatabase(c.env.DATABASE_URL); const session = auth(c);
   const body = await c.req.json<{ organizationId?:string; title?:string; slug?:string; description?:string; ticketPrice?:string; numbersCount?:number; drawMethod?:"RIFA_X"|"FEDERAL_LOTTERY"; drawAt?:string; pixKey?:string; pixCity?:string; bannerUrl?:string; prizes?:{title:string;description?:string;imageUrl?:string}[] }>();
-  if (!body.title?.trim() || !body.slug?.trim() || !body.ticketPrice || !Number.isInteger(body.numbersCount) || body.numbersCount < 1) return c.json({error:"Invalid raffle data"},400);
+  const rawNumbersCount = body.numbersCount;
+  if (!body.title?.trim() || !body.slug?.trim() || !body.ticketPrice || !Number.isInteger(rawNumbersCount) || rawNumbersCount < 1) return c.json({error:"Invalid raffle data"},400);
   const organizationId = session.role === "SUPER_ADMIN" ? body.organizationId : session.organizationId;
   if (!organizationId || !body.pixKey?.trim() || !body.pixCity?.trim()) return c.json({error:"Organization and Pix configuration are required"},400);
-  const numbersCount = body.numbersCount;
+  const numbersCount = rawNumbersCount;
   const title = body.title.trim();
   const slug = body.slug.trim().toLowerCase();
   const ticketPrice = body.ticketPrice;
