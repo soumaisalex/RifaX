@@ -1,8 +1,10 @@
 name: CI
+
 on:
   push:
     branches: [main, feature/admin-foundation]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   quality:
