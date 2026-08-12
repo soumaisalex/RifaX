@@ -2,6 +2,14 @@
   "name": "@rifa-x/database",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./services": "./src/services/index.ts",
+    "./services/orders": "./src/services/orders.ts",
+    "./services/pix": "./src/services/pix.ts",
+    "./services/reservations": "./src/services/reservations.ts"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
