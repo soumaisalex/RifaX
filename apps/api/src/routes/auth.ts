@@ -3,8 +3,9 @@ import { and, eq, isNull } from "drizzle-orm";
 import { createDatabase } from "@rifa-x/database";
 import { auditLogs, users } from "@rifa-x/database/schema";
 import { createSession, requireRole } from "../middleware/auth";
+import type { AppBindings, AppVariables } from "../types";
 
-const auth = new Hono();
+const auth = new Hono<{ Bindings: AppBindings; Variables: AppVariables }>();
 const COOKIE = "rifax_session";
 const roles = ["SUPER_ADMIN","ORGANIZATION_ADMIN","COLLABORATOR"] as const;
 async function hashPassword(password:string){const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(password));return Array.from(new Uint8Array(d)).map(b=>b.toString(16).padStart(2,"0")).join("")}
@@ -15,5 +16,5 @@ auth.post("/login",async c=>{const body=await c.req.json<{email?:string;password
 auth.post("/logout",requireRole([...roles]),async c=>{clearCookie(c);return c.json({ok:true})});
 auth.get("/me",requireRole([...roles]),async c=>c.json({user:c.get("auth")}));
 auth.get("/admins",requireRole(["SUPER_ADMIN"]),async c=>{const db=createDatabase(c.env.DATABASE_URL);const rows=await db.query.users.findMany({where:and(eq(users.role,"ORGANIZATION_ADMIN"),isNull(users.deletedAt)),columns:{id:true,organizationId:true,name:true,email:true,status:true,createdAt:true}});return c.json({admins:rows})});
-auth.post("/admins",requireRole(["SUPER_ADMIN"]),async c=>{const body=await c.req.json<{organizationId?:string;name?:string;email?:string;password?:string}>();if(!body.organizationId||!body.name?.trim()||!body.email?.trim()||!body.password||body.password.length<8)return c.json({error:"Organization, name, email and password (min. 8 chars) are required"},400);const db=createDatabase(c.env.DATABASE_URL);try{const [user]=await db.insert(users).values({organizationId:body.organizationId,name:body.name.trim(),email:body.email.trim().toLowerCase(),passwordHash:await hashPassword(body.password),role:"ORGANIZATION_ADMIN",status:"ACTIVE"}).returning({id:users.id,organizationId:users.organizationId,name:users.name,email:users.email,role:users.role});const session=c.get("auth") as {userId:string};await db.insert(auditLogs).values({organizationId:body.organizationId,actorUserId:session.userId,action:"ADMIN_CREATED",entityType:"USER",entityId:user.id,metadata:{email:user.email}});return c.json({user},201)}catch{return c.json({error:"Unable to create administrator"},409)}});
+auth.post("/admins",requireRole(["SUPER_ADMIN"]),async c=>{const body=await c.req.json<{organizationId?:string;name?:string;email?:string;password?:string}>();if(!body.organizationId||!body.name?.trim()||!body.email?.trim()||!body.password||body.password.length<8)return c.json({error:"Organization, name, email and password (min. 8 chars) are required"},400);const db=createDatabase(c.env.DATABASE_URL);try{const [user]=await db.insert(users).values({organizationId:body.organizationId,name:body.name.trim(),email:body.email.trim().toLowerCase(),passwordHash:await hashPassword(body.password),role:"ORGANIZATION_ADMIN",status:"ACTIVE"}).returning({id:users.id,organizationId:users.organizationId,name:users.name,email:users.email,role:users.role});const session=c.get("auth");await db.insert(auditLogs).values({organizationId:body.organizationId,actorUserId:session.userId,action:"ADMIN_CREATED",entityType:"USER",entityId:user.id,metadata:{email:user.email}});return c.json({user},201)}catch{return c.json({error:"Unable to create administrator"},409)}});
 export default auth;
