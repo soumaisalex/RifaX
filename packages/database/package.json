@@ -2,9 +2,24 @@
   "name": "@rifa-x/database",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./services": "./src/services/index.ts",
+    "./services/orders": "./src/services/orders.ts",
+    "./services/pix": "./src/services/pix.ts",
+    "./services/reservations": "./src/services/reservations.ts"
+  },
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "lint": "echo 'lint: pending'",
-    "test": "echo 'test: pending'"
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.5",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "drizzle-kit": "^0.31.4",
+    "typescript": "^5.9.2"
   }
 }

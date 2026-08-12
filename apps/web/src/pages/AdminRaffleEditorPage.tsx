@@ -1,0 +1,23 @@
+import { FormEvent, useState } from "react";
+
+type Prize = { title: string; description: string; imageUrl: string };
+type Form = { title: string; slug: string; description: string; ticketPrice: string; numbersCount: string; drawMethod: "INTERNAL" | "FEDERAL_LOTTERY"; drawAt: string; pixKey: string; pixCity: string; bannerUrl: string };
+
+const initial: Form = { title:"", slug:"", description:"", ticketPrice:"", numbersCount:"100", drawMethod:"INTERNAL", drawAt:"", pixKey:"", pixCity:"", bannerUrl:"" };
+const auth = () => ({ Authorization:`Bearer ${localStorage.getItem("rifax_session") ?? ""}`, "Content-Type":"application/json" });
+
+export default function AdminRaffleEditorPage({ raffleId }: { raffleId?: string }) {
+  const [form,setForm]=useState<Form>(initial); const [prizes,setPrizes]=useState<Prize[]>([{title:"",description:"",imageUrl:""}]); const [saving,setSaving]=useState(false); const [message,setMessage]=useState("");
+  const update=(key:keyof Form,value:string)=>setForm(f=>({...f,[key]:value}));
+  const submit=async(e:FormEvent)=>{e.preventDefault();setSaving(true);setMessage(""); const payload={...form,numbersCount:Number(form.numbersCount),prizes:prizes.filter(p=>p.title.trim()),drawAt:form.drawAt||undefined}; const response=await fetch(raffleId?`/api/admin/raffles/${raffleId}`:"/api/admin/raffles",{method:raffleId?"PATCH":"POST",headers:auth(),body:JSON.stringify(payload)}); setSaving(false);setMessage(response.ok?"Rifa salva com sucesso.":"Não foi possível salvar a rifa.");};
+  return <main className="raffle-editor"><header className="admin-header"><div><span className="section-label">RIFA X</span><h1>{raffleId?"Editar rifa":"Nova rifa"}</h1></div><button form="raffle-form" disabled={saving}>{saving?"Salvando…":"Salvar rifa"}</button></header>
+    <form id="raffle-form" onSubmit={submit} className="editor-form">
+      <section><span className="section-label">IDENTIDADE</span><h2>Informações da rifa</h2><label>Título<input required value={form.title} onChange={e=>update("title",e.target.value)}/></label><label>URL pública<input required value={form.slug} onChange={e=>update("slug",e.target.value.toLowerCase().replace(/\s+/g,"-"))} placeholder="rifa-da-mara"/></label><label>Descrição<textarea value={form.description} onChange={e=>update("description",e.target.value)}/></label><label>Banner URL<input value={form.bannerUrl} onChange={e=>update("bannerUrl",e.target.value)}/></label></section>
+      <section><span className="section-label">NÚMEROS</span><h2>Configuração</h2><div className="form-grid"><label>Quantidade<input required min="1" type="number" value={form.numbersCount} onChange={e=>update("numbersCount",e.target.value)}/></label><label>Valor por número<input required min="0.01" step="0.01" type="number" value={form.ticketPrice} onChange={e=>update("ticketPrice",e.target.value)}/></label></div></section>
+      <section><span className="section-label">PRÊMIOS</span><h2>O que será sorteado?</h2>{prizes.map((p,i)=><div className="prize-editor" key={i}><input required={i===0} placeholder="Nome do prêmio" value={p.title} onChange={e=>setPrizes(x=>x.map((v,j)=>j===i?{...v,title:e.target.value}:v))}/><textarea placeholder="Descrição" value={p.description} onChange={e=>setPrizes(x=>x.map((v,j)=>j===i?{...v,description:e.target.value}:v))}/><input placeholder="Imagem URL" value={p.imageUrl} onChange={e=>setPrizes(x=>x.map((v,j)=>j===i?{...v,imageUrl:e.target.value}:v))}/>{prizes.length>1&&<button type="button" onClick={()=>setPrizes(x=>x.filter((_,j)=>j!==i))}>Remover</button>}</div>)}<button type="button" onClick={()=>setPrizes(x=>[...x,{title:"",description:"",imageUrl:""}])}>+ Adicionar prêmio</button></section>
+      <section><span className="section-label">PIX</span><h2>Recebimento</h2><div className="form-grid"><label>Chave Pix<input required value={form.pixKey} onChange={e=>update("pixKey",e.target.value)}/></label><label>Cidade do recebedor<input required maxLength={15} value={form.pixCity} onChange={e=>update("pixCity",e.target.value.toUpperCase())}/></label></div></section>
+      <section><span className="section-label">SORTEIO</span><h2>Regra do sorteio</h2><div className="form-grid"><label>Método<select value={form.drawMethod} onChange={e=>update("drawMethod",e.target.value)}><option value="INTERNAL">Sorteio interno — ao vivo</option><option value="FEDERAL_LOTTERY">Loteria Federal</option></select></label><label>Data/hora<input type="datetime-local" value={form.drawAt} onChange={e=>update("drawAt",e.target.value)}/></label></div></section>
+      {message&&<p role="status">{message}</p>}
+    </form>
+  </main>;
+}

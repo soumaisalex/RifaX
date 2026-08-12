@@ -4,9 +4,19 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "build": "echo 'build: worker source'",
+    "build": "wrangler deploy --dry-run",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'lint: pending'",
     "test": "echo 'test: pending'"
+  },
+  "dependencies": {
+    "@rifa-x/database": "workspace:*",
+    "drizzle-orm": "^0.44.5",
+    "hono": "^4.9.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250815.0",
+    "typescript": "^5.9.2",
+    "wrangler": "4.30.0"
   }
 }
