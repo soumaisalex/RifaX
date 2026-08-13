@@ -2,7 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [main, feature/admin-foundation]
+    branches:
+      - main
+      - feature/admin-foundation
+      - feature/admin-phase-2
   pull_request:
   workflow_dispatch:
 
