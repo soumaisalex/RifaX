@@ -6,6 +6,8 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import SuperAdminDashboardPage from "./pages/super-admin/SuperAdminDashboardPage";
 import RaffleResultPage from "./pages/public/RaffleResultPage";
 import CheckoutPage from "./pages/public/CheckoutPage";
+import LoginPage from "./pages/LoginPage";
+import AuthGate from "./auth/AuthGate";
 
 function CheckoutRoute({ slug }: { slug: string }) {
   const [raffle, setRaffle] = useState<{ id: string; title: string; ticketPrice: string } | null>(null);
@@ -27,37 +29,22 @@ function CheckoutRoute({ slug }: { slug: string }) {
     .map(Number)
     .filter(Number.isFinite);
 
-  return (
-    <CheckoutPage
-      raffleId={raffle.id}
-      raffleTitle={raffle.title}
-      selectedNumbers={selectedNumbers}
-      ticketPrice={Number(raffle.ticketPrice)}
-    />
-  );
+  return <CheckoutPage raffleId={raffle.id} raffleTitle={raffle.title} selectedNumbers={selectedNumbers} ticketPrice={Number(raffle.ticketPrice)} />;
 }
 
 function App() {
   const path = window.location.pathname;
   const parts = path.split("/").filter(Boolean);
 
-  if (parts[0] === "admin") return <AdminDashboardPage />;
-  if (parts[0] === "super-admin") return <SuperAdminDashboardPage />;
+  if (parts[0] === "login") return <LoginPage />;
+  if (parts[0] === "admin") return <AuthGate roles={["ORGANIZATION_ADMIN", "COLLABORATOR", "SUPER_ADMIN"]} loginPath="/login"><AdminDashboardPage /></AuthGate>;
+  if (parts[0] === "super-admin") return <AuthGate roles={["SUPER_ADMIN"]} loginPath="/login"><SuperAdminDashboardPage /></AuthGate>;
   if (parts[0] === "pedido" && parts[1]) return <OrderConfirmationPage token={parts[1]} />;
   if (parts[0] === "resultado" && parts[1]) return <RaffleResultPage />;
   if (parts[0] === "r" && parts[1] && parts[2] === "checkout") return <CheckoutRoute slug={parts[1]} />;
   if (parts[0] === "r" && parts[1]) return <PublicRafflePage slug={parts[1]} />;
 
-  return (
-    <main>
-      <h1>Rifa X</h1>
-      <p>Plataforma de rifas online.</p>
-    </main>
-  );
+  return <main><h1>Rifa X</h1><p>Plataforma de rifas online.</p></main>;
 }
 
-createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+createRoot(document.getElementById("root")!).render(<React.StrictMode><App /></React.StrictMode>);
