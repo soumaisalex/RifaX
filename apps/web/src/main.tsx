@@ -6,6 +6,7 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import SuperAdminDashboardPage from "./pages/super-admin/SuperAdminDashboardPage";
 import OrganizationsPage from "./pages/super-admin/OrganizationsPage";
 import OrganizationFormPage from "./pages/super-admin/OrganizationFormPage";
+import OrganizationDetailsPage from "./pages/super-admin/OrganizationDetailsPage";
 import RaffleResultPage from "./pages/public/RaffleResultPage";
 import CheckoutPage from "./pages/public/CheckoutPage";
 
@@ -29,14 +30,7 @@ function CheckoutRoute({ slug }: { slug: string }) {
     .map(Number)
     .filter(Number.isFinite);
 
-  return (
-    <CheckoutPage
-      raffleId={raffle.id}
-      raffleTitle={raffle.title}
-      selectedNumbers={selectedNumbers}
-      ticketPrice={Number(raffle.ticketPrice)}
-    />
-  );
+  return <CheckoutPage raffleId={raffle.id} raffleTitle={raffle.title} selectedNumbers={selectedNumbers} ticketPrice={Number(raffle.ticketPrice)} />;
 }
 
 function App() {
@@ -45,6 +39,7 @@ function App() {
 
   if (parts[0] === "admin") return <AdminDashboardPage />;
   if (parts[0] === "super-admin" && parts[1] === "organizations" && parts[2] === "new") return <OrganizationFormPage />;
+  if (parts[0] === "super-admin" && parts[1] === "organizations" && parts[2]) return <OrganizationDetailsPage id={parts[2]} />;
   if (parts[0] === "super-admin" && parts[1] === "organizations") return <OrganizationsPage />;
   if (parts[0] === "super-admin") return <SuperAdminDashboardPage />;
   if (parts[0] === "pedido" && parts[1]) return <OrderConfirmationPage token={parts[1]} />;
@@ -52,16 +47,7 @@ function App() {
   if (parts[0] === "r" && parts[1] && parts[2] === "checkout") return <CheckoutRoute slug={parts[1]} />;
   if (parts[0] === "r" && parts[1]) return <PublicRafflePage slug={parts[1]} />;
 
-  return (
-    <main>
-      <h1>Rifa X</h1>
-      <p>Plataforma de rifas online.</p>
-    </main>
-  );
+  return <main><h1>Rifa X</h1><p>Plataforma de rifas online.</p></main>;
 }
 
-createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+createRoot(document.getElementById("root")!).render(<React.StrictMode><App /></React.StrictMode>);
