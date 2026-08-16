@@ -15,3 +15,5 @@ This repository contains the initial monorepo foundation for Rifa X.
 ## Security
 
 Secrets are intentionally excluded from the repository. Neon credentials and Cloudflare secrets will be configured through environment variables/secrets.
+
+Tudo por Alex Passos
