@@ -7,6 +7,7 @@ import CreateRafflePage from "./pages/CreateRafflePage";
 import PublicRafflePage from "./pages/PublicRafflePage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import DrawPage from "./pages/admin/DrawPage";
 import SuperAdminDashboardPage from "./pages/super-admin/SuperAdminDashboardPage";
 import OrganizationsPage from "./pages/super-admin/OrganizationsPage";
 import OrganizationFormPage from "./pages/super-admin/OrganizationFormPage";
@@ -30,6 +31,7 @@ function App() {
   const parts = path.split("/").filter(Boolean);
   if (parts[0] === "admin" && parts[1] === "login") return <AdminLoginPage />;
   if (parts[0] === "admin" && parts[1] === "raffles" && parts[2] === "new") return <CreateRafflePage />;
+  if (parts[0] === "admin" && parts[1] === "raffles" && parts[2] && parts[3] === "draw") return <DrawPage />;
   if (parts[0] === "admin") return <AdminDashboardPage />;
   if (parts[0] === "super-admin" && parts[1] === "organizations" && parts[2] === "new") return <OrganizationFormPage />;
   if (parts[0] === "super-admin" && parts[1] === "organizations" && parts[2]) return <OrganizationDetailsPage id={parts[2]} />;
