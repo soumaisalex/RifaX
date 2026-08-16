@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 
 type Raffle = { id:string; slug:string; title:string; status:string; ticketPrice:string; numbersCount:number; drawAt?:string|null };
 type Order = { id:string; raffleId:string; raffleTitle:string; buyerName:string; buyerPhone:string; total:string; status:string; createdAt:string };
-
 const auth = () => ({ Authorization: `Bearer ${localStorage.getItem("rifax_session") ?? ""}` });
 
 export default function AdminDashboardPage() {
@@ -14,6 +13,9 @@ export default function AdminDashboardPage() {
   return <main className="admin-dashboard">
     <header className="admin-header"><div><span className="section-label">RIFA X</span><h1>Dashboard</h1><p>Gestão de rifas, números e pagamentos.</p></div><div className="header-actions"><a className="button primary" href="/admin/raffles/new">+ Nova rifa</a><button className="button secondary" onClick={logout}>Sair</button></div></header>
     <section className="stats-grid"><article><span>Rifas ativas</span><strong>{stats.active}</strong></article><article><span>Pedidos pagos</span><strong>{stats.sold}</strong></article><article><span>Aguardando Pix</span><strong>{stats.pending}</strong></article><article><span>Faturamento</span><strong>R$ {stats.revenue.toFixed(2).replace(".",",")}</strong></article></section>
+    <section className="admin-panel"><div className="panel-header"><div><span className="section-label">RIFAS</span><h2>Minhas rifas</h2></div><a className="button secondary" href="/admin/raffles/new">Criar rifa</a></div>
+      <div className="raffle-list">{raffles.length===0?<div className="empty-state"><strong>Você ainda não criou uma rifa.</strong><span>Comece agora e publique sua primeira rifa.</span><a className="button primary" href="/admin/raffles/new">Criar primeira rifa</a></div>:raffles.map(r=><article className="raffle-row" key={r.id}><div><strong>{r.title}</strong><span>/{r.slug} · {r.numbersCount} números · R$ {Number(r.ticketPrice).toFixed(2).replace(".",",")}</span></div><span className={`status status-${r.status.toLowerCase()}`}>{r.status}</span><a className="button secondary" href={`/r/${r.slug}`}>Abrir</a></article>)}</div>
+    </section>
     <section className="admin-panel"><div className="panel-header"><div><span className="section-label">PEDIDOS</span><h2>Pagamentos</h2></div><div className="order-tools"><input value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>e.key==="Enter"&&load()} placeholder="Buscar nome, telefone ou pedido"/><button onClick={load}>Buscar</button></div></div>
       <nav className="admin-filters">{["ALL","PENDING","PAID","CANCELLED"].map(s=><button key={s} className={status===s?"active":""} onClick={()=>setStatus(s)}>{s==="ALL"?"Todos":s==="PENDING"?"Pendentes":s==="PAID"?"Pagos":"Cancelados"}</button>)}</nav>
       {error&&<div className="form-error">{error}</div>}
