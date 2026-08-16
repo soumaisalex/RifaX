@@ -1,0 +1,7 @@
+name = "rifax"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-08-16"
+
+[[services]]
+binding = "API"
+service = "rifa-x-api"
