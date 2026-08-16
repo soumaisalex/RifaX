@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { sql } from "drizzle-orm";
+import { createDatabase } from "@rifa-x/database";
 import auth from "./routes/auth";
 import superAdmin from "./routes/super-admin";
 import adminRaffles from "./routes/admin-raffles";
@@ -15,6 +17,16 @@ const app = new Hono<{ Bindings: AppBindings; Variables: AppVariables }>();
 app.use("/api/*", cors({ origin: (origin) => origin || "", allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"], allowHeaders: ["Content-Type", "Authorization"], maxAge: 86400 }));
 app.use("/api/*", async (c, next) => { c.header("X-Content-Type-Options", "nosniff"); c.header("X-Frame-Options", "DENY"); c.header("Referrer-Policy", "strict-origin-when-cross-origin"); await next(); });
 app.get("/api/health", (c) => c.json({ status: "ok", service: "rifa-x-api", env: c.env.APP_ENV ?? "development" }));
+app.get("/api/health/db", async (c) => {
+  try {
+    const db = createDatabase(c.env.DATABASE_URL);
+    await db.execute(sql`select 1 as ok`);
+    return c.json({ status: "ok", database: "connected" });
+  } catch (error) {
+    console.error("Database health check failed", error);
+    return c.json({ status: "error", database: "unavailable" }, 503);
+  }
+});
 app.route("/api/auth", auth);
 app.route("/api/super-admin", superAdmin);
 app.route("/api/admin/raffles", adminRaffles);
