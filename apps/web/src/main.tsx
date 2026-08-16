@@ -4,6 +4,8 @@ import PublicRafflePage from "./pages/PublicRafflePage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import SuperAdminDashboardPage from "./pages/super-admin/SuperAdminDashboardPage";
+import OrganizationsPage from "./pages/super-admin/OrganizationsPage";
+import OrganizationFormPage from "./pages/super-admin/OrganizationFormPage";
 import RaffleResultPage from "./pages/public/RaffleResultPage";
 import CheckoutPage from "./pages/public/CheckoutPage";
 
@@ -42,6 +44,8 @@ function App() {
   const parts = path.split("/").filter(Boolean);
 
   if (parts[0] === "admin") return <AdminDashboardPage />;
+  if (parts[0] === "super-admin" && parts[1] === "organizations" && parts[2] === "new") return <OrganizationFormPage />;
+  if (parts[0] === "super-admin" && parts[1] === "organizations") return <OrganizationsPage />;
   if (parts[0] === "super-admin") return <SuperAdminDashboardPage />;
   if (parts[0] === "pedido" && parts[1]) return <OrderConfirmationPage token={parts[1]} />;
   if (parts[0] === "resultado" && parts[1]) return <RaffleResultPage />;
