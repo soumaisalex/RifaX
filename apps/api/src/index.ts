@@ -18,13 +18,24 @@ app.use("/api/*", cors({ origin: (origin) => origin || "", allowMethods: ["GET",
 app.use("/api/*", async (c, next) => { c.header("X-Content-Type-Options", "nosniff"); c.header("X-Frame-Options", "DENY"); c.header("Referrer-Policy", "strict-origin-when-cross-origin"); await next(); });
 app.get("/api/health", (c) => c.json({ status: "ok", service: "rifa-x-api", env: c.env.APP_ENV ?? "development" }));
 app.get("/api/health/db", async (c) => {
+  const databaseUrl = c.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    console.error("Database health check: DATABASE_URL is missing from Worker environment");
+    return c.json({ status: "error", database: "missing_configuration" }, 503);
+  }
+
   try {
-    const db = createDatabase(c.env.DATABASE_URL);
+    const db = createDatabase(databaseUrl);
     await db.execute(sql`select 1 as ok`);
     return c.json({ status: "ok", database: "connected" });
   } catch (error) {
-    console.error("Database health check failed", error);
-    return c.json({ status: "error", database: "unavailable" }, 503);
+    const message = error instanceof Error ? error.message : String(error);
+    const safeMessage = message
+      .replace(/postgres(?:ql)?:\/\/[^\s]+/gi, "[redacted-database-url]")
+      .replace(/password=[^\s&]+/gi, "password=[redacted]");
+    console.error("Database health check connection failed", safeMessage);
+    return c.json({ status: "error", database: "connection_failed" }, 503);
   }
 });
 app.route("/api/auth", auth);
