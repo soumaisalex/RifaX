@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { sql } from "drizzle-orm";
 import { createDatabase } from "@rifa-x/database";
 import auth from "./routes/auth";
+import bootstrap from "./routes/bootstrap";
 import superAdmin from "./routes/super-admin";
 import adminRaffles from "./routes/admin-raffles";
 import adminOrders from "./routes/admin-orders";
@@ -39,6 +40,7 @@ app.get("/api/health/db", async (c) => {
   }
 });
 app.route("/api/auth", auth);
+app.route("/api/auth/bootstrap", bootstrap);
 app.route("/api/super-admin", superAdmin);
 app.route("/api/admin/raffles", adminRaffles);
 app.route("/api/admin/orders", adminOrders);
